@@ -1,0 +1,19 @@
+program ControleHoras;
+
+uses
+  Forms,
+  untMenu in 'untMenu.pas' {frmMenu},
+  untMovimentacaoHoras in 'untMovimentacaoHoras.pas' {frmMovimentacaoHoras},
+  untModulo in 'untModulo.pas' {frmModulo: TDataModule},
+  untCadAtividade in 'untCadAtividade.pas' {frmCadAtividade};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.CreateForm(TfrmMenu, frmMenu);
+  Application.CreateForm(TfrmMovimentacaoHoras, frmMovimentacaoHoras);
+  Application.CreateForm(TfrmModulo, frmModulo);
+  Application.CreateForm(TfrmCadAtividade, frmCadAtividade);
+  Application.Run;
+end.
