@@ -148,6 +148,7 @@ object frmCorpo: TfrmCorpo
     object qryCorpoPESO: TIBBCDField
       FieldName = 'PESO'
       Origin = 'CORPO.PESO'
+      DisplayFormat = '###,##0.000'
       Precision = 4
       Size = 3
     end
