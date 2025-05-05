@@ -6,7 +6,8 @@ uses
   untMovimentacaoHoras in 'untMovimentacaoHoras.pas' {frmMovimentacaoHoras},
   untModulo in 'untModulo.pas' {frmModulo: TDataModule},
   untCadAtividade in 'untCadAtividade.pas' {frmCadAtividade},
-  untExcelParaBancoDados in 'untExcelParaBancoDados.pas' {frmExcelParaBancoDados};
+  untExcelParaBancoDados in 'untExcelParaBancoDados.pas' {frmExcelParaBancoDados},
+  untCorpo in 'untCorpo.pas' {frmCorpo};
 
 {$R *.res}
 
@@ -17,5 +18,6 @@ begin
   Application.CreateForm(TfrmModulo, frmModulo);
   Application.CreateForm(TfrmCadAtividade, frmCadAtividade);
   Application.CreateForm(TfrmExcelParaBancoDados, frmExcelParaBancoDados);
+  Application.CreateForm(TfrmCorpo, frmCorpo);
   Application.Run;
 end.

@@ -28,6 +28,10 @@ object frmMenu: TfrmMenu
         Caption = 'Movimenta'#231#227'o de Horas'
         OnClick = MovimentaodeHoras1Click
       end
+      object Corpo1: TMenuItem
+        Caption = 'Corpo'
+        OnClick = Corpo1Click
+      end
     end
     object Importardoexcel1: TMenuItem
       Caption = 'Importar do excel'

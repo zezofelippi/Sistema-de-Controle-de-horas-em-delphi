@@ -1,6 +1,6 @@
 object frmMovimentacaoHoras: TfrmMovimentacaoHoras
-  Left = 269
-  Top = 211
+  Left = 512
+  Top = 204
   BorderStyle = bsSingle
   Caption = 'Movimenta'#231#227'o de Horas'
   ClientHeight = 501
