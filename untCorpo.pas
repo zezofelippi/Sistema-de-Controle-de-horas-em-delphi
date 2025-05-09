@@ -22,6 +22,10 @@ type
     qryCorpoDATA: TDateTimeField;
     IBTransLocal: TIBTransaction;
     qry_trans_local: TIBQuery;
+    Label1: TLabel;
+    edtCintura: TCurrencyEdit;
+    Label2: TLabel;
+    qryCorpoCINTURA: TIntegerField;
     procedure Button1Click(Sender: TObject);
     procedure limpa_campos(Sender : TObject);
     procedure FormShow(Sender: TObject);
@@ -59,17 +63,18 @@ begin
       IBTransLocal.StartTransaction;
     qry_trans_local.Close;
     qry_trans_local.SQL.Clear;
-    qry_trans_local.SQL.Add('INSERT INTO CORPO (DATA, PESO)'+
-                            'VALUES (:DATA, :PESO) ');
+    qry_trans_local.SQL.Add('INSERT INTO CORPO (DATA, PESO, CINTURA)'+
+                            'VALUES (:DATA, :PESO, :CINTURA) ');
     qry_trans_local.ParamByName('DATA').AsString  := edtData.Text;
     qry_trans_local.ParamByName('PESO').AsFloat  :=  edtPeso.Value;
+    qry_trans_local.ParamByName('CINTURA').AsFloat  :=  edtCintura.Value;
 
     qry_trans_local.ExecSQL;
     IBTransLocal.Commit;
 
     qryCorpo.Close;
     qryCorpo.SQL.Clear;
-    qryCorpo.SQL.Add('SELECT ID_CORPO, DATA, PESO FROM CORPO   '+
+    qryCorpo.SQL.Add('SELECT ID_CORPO, DATA, PESO, CINTURA FROM CORPO   '+
       'ORDER BY DATA');
     qryCorpo.Open;
     qryCorpo.FetchAll;
@@ -81,7 +86,7 @@ procedure TfrmCorpo.FormShow(Sender: TObject);
 begin
   qryCorpo.Close;
   qryCorpo.SQL.Clear;
-  qryCorpo.SQL.Add('SELECT ID_CORPO, DATA, PESO FROM CORPO   '+
+  qryCorpo.SQL.Add('SELECT ID_CORPO, DATA, PESO, CINTURA FROM CORPO   '+
    'ORDER BY DATA');
   qryCorpo.Open;
   qryCorpo.FetchAll;

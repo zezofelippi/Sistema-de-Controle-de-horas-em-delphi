@@ -1,7 +1,7 @@
 object frmCorpo: TfrmCorpo
   Left = 433
   Top = 195
-  Width = 447
+  Width = 452
   Height = 508
   Caption = 'Corpo'
   Color = clBtnFace
@@ -40,6 +40,32 @@ object frmCorpo: TfrmCorpo
     Font.Style = []
     ParentFont = False
   end
+  object Label1: TLabel
+    Left = 210
+    Top = 8
+    Width = 102
+    Height = 20
+    Caption = 'Cintura em cm'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 12
+    Top = 77
+    Width = 418
+    Height = 16
+    Caption = 'Cintura medida de manha em jejum 1 dedo acima do umbigo'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
   object edtData: TDateEdit
     Left = 13
     Top = 32
@@ -71,7 +97,7 @@ object frmCorpo: TfrmCorpo
     TabOrder = 1
   end
   object Button1: TButton
-    Left = 216
+    Left = 328
     Top = 31
     Width = 94
     Height = 28
@@ -87,9 +113,9 @@ object frmCorpo: TfrmCorpo
   end
   object DBGrid1: TDBGrid
     Left = 8
-    Top = 72
+    Top = 109
     Width = 417
-    Height = 385
+    Height = 354
     DataSource = dtsCorpo
     Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgConfirmDelete, dgCancelOnExit, dgMultiSelect]
     TabOrder = 3
@@ -124,7 +150,41 @@ object frmCorpo: TfrmCorpo
         Title.Font.Style = [fsBold]
         Width = 50
         Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'CINTURA'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        Title.Alignment = taCenter
+        Title.Color = clNavy
+        Title.Font.Charset = DEFAULT_CHARSET
+        Title.Font.Color = clWhite
+        Title.Font.Height = -13
+        Title.Font.Name = 'MS Sans Serif'
+        Title.Font.Style = [fsBold]
+        Width = 75
+        Visible = True
       end>
+  end
+  object edtCintura: TCurrencyEdit
+    Left = 236
+    Top = 29
+    Width = 74
+    Height = 28
+    AutoSize = False
+    DecimalPlaces = 1
+    DisplayFormat = '#0'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 4
   end
   object dtsCorpo: TDataSource
     DataSet = qryCorpo
@@ -156,20 +216,24 @@ object frmCorpo: TfrmCorpo
       FieldName = 'DATA'
       Origin = 'CORPO.DATA'
     end
+    object qryCorpoCINTURA: TIntegerField
+      FieldName = 'CINTURA'
+      Origin = 'CORPO.CINTURA'
+    end
   end
   object IBTransLocal: TIBTransaction
     Active = False
     DefaultDatabase = frmModulo.BD
     AutoStopAction = saNone
     Left = 336
-    Top = 32
+    Top = 80
   end
   object qry_trans_local: TIBQuery
     Database = frmModulo.BD
     Transaction = IBTransLocal
     BufferChunks = 1000
     CachedUpdates = False
-    Left = 376
-    Top = 32
+    Left = 368
+    Top = 72
   end
 end
