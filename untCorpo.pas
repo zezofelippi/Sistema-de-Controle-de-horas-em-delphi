@@ -29,6 +29,7 @@ type
     procedure Button1Click(Sender: TObject);
     procedure limpa_campos(Sender : TObject);
     procedure FormShow(Sender: TObject);
+    procedure DBGrid1TitleClick(Column: TColumn);
   private
     { Private declarations }
   public
@@ -90,6 +91,25 @@ begin
    'ORDER BY DATA');
   qryCorpo.Open;
   qryCorpo.FetchAll;
+end;
+
+procedure TfrmCorpo.DBGrid1TitleClick(Column: TColumn);
+var
+  campo: string;
+begin
+  campo := column.fieldname; // CAMPO RECEBE O NOME DA COLUNA CLICADA,
+  application.processmessages; // para considerar algo que aconteça no dbgrid durante a entrada nesta procedure
+
+  qryCorpo.Close;
+  qryCorpo.SQL.Clear;
+  qryCorpo.SQL.Add('SELECT ID_CORPO, DATA, PESO, CINTURA FROM CORPO   '+
+      'ORDER BY ' + campo);
+  qryCorpo.Open;
+  qryCorpo.FetchAll;
+
+
+
+
 end;
 
 end.

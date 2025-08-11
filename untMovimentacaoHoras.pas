@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, DBGrids, StdCtrls, Mask, DBCtrls, ToolEdit, DB,
-  IBCustomDataSet, IBQuery, IBDatabase, DBClient, Menus, ExtCtrls;
+  IBCustomDataSet, IBQuery, IBDatabase, DBClient, Menus, ExtCtrls,
+  DateUtils;
 
 type
   TfrmMovimentacaoHoras = class(TForm)
@@ -49,6 +50,15 @@ type
     edtObsPesquisa: TEdit;
     GroupBox4: TGroupBox;
     edtDias: TEdit;
+    Label8: TLabel;
+    edtIntervaloDatas: TEdit;
+    Label9: TLabel;
+    Label10: TLabel;
+    cboAtividadePesq: TDBLookupComboBox;
+    dsAtividadePesquisa: TDataSource;
+    qryAtividadePesquisa: TIBQuery;
+    qryAtividadePesquisaATIVIDADE: TIBStringField;
+    qryAtividadePesquisaATI_CODIGO: TIntegerField;
     procedure btnSalvarClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure limpa_campos(Sender : TObject);
@@ -63,6 +73,9 @@ type
     procedure cboAtividadeExit(Sender: TObject);
     procedure Alterar1Click(Sender: TObject);
     procedure rdgTipoPesquisaClick(Sender: TObject);
+    procedure cboAtividadePesqKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure DBGrid1TitleClick(Column: TColumn);
   private
     { Private declarations }
   public
@@ -78,6 +91,11 @@ implementation
 uses untModulo;
 
 {$R *.dfm}
+
+function DiasEntreDatas(DataInicial, DataFinal: TDate): Integer;
+begin
+  Result := DaysBetween(DataFinal, DataInicial) +1;
+end;
 
 procedure TfrmMovimentacaoHoras.limpa_campos(Sender: TObject);
 begin
@@ -124,9 +142,7 @@ begin
 
 
   //Verifica se atividade ja foi lançada no dia/////
-
- // data_pesquisa:= Copy(edtData.Text,4,3) + Copy(edtData.Text,1,3) + Copy(edtData.Text,7,4)+ ' 00:00:00';
-  data_pesquisa:=  Copy(edtData.Text,1,3) +  Copy(edtData.Text,4,3) + Copy(edtData.Text,7,4)+ ' 00:00:00';
+   data_pesquisa:=  Copy(edtData.Text,1,3) +  Copy(edtData.Text,4,3) + Copy(edtData.Text,7,4)+ ' 00:00:00';
 
   qryPesquisa.Close;
   qryPesquisa.SQL.Clear;
@@ -242,6 +258,15 @@ begin
   qryAtividade.Open;
   qryAtividade.FetchAll;
 
+  qryAtividadePesquisa.Close;
+  qryAtividadePesquisa.SQL.Clear;
+  qryAtividadePesquisa.SQL.Add('SELECT ATI_CODIGO, ATI_DESCRICAO AS ATIVIDADE FROM CAD_ATIVIDADES   '+
+   'WHERE ATI_TIPO=:ATI_TIPO '+
+   'ORDER BY ATI_DESCRICAO');
+  qryAtividadePesquisa.parambyname('ATI_TIPO').asstring:= 'A';
+  qryAtividadePesquisa.Open;
+  qryAtividadePesquisa.FetchAll;
+
   alterar:= 'N';
   edtData.setfocus;
 end;
@@ -279,11 +304,31 @@ var
   nomeColuna, tipo, data1, data2, dta, obs: string;
   i: integer;
   qtde_horas : TTime;
-  Horas, Minutos, TotalMinutos, TotalHoras: Integer;
-  qtde_horas_total: string;
+  Horas, Minutos, TotalMinutos, TotalHoras, qtde_dias: Integer;
+  qtde_horas_total, atividadePesq: string;
 
 begin
+
+  cdsGrid.Filtered := false;
+  cdsGrid.IndexFieldNames := '';
+
+
+  data1 := Copy(txt_data_i.Text,4,3) + Copy(txt_data_i.Text,1,3) + Copy(txt_data_i.Text,7,4) + ' 00:00:00';
+  data2 := Copy(txt_data_f.Text,4,3) + Copy(txt_data_f.Text,1,3) + Copy(txt_data_f.Text,7,4) + ' 23:59:59';
+
+  if (txt_data_i.Text <> '  /  /    ') and (txt_data_f.Text <> '  /  /    ') then
+    dta := ' AND DATA BETWEEN '+ #39 + data1 + #39 + ' AND '+ #39 + data2 + #39
+  else
+    dta := '';
+
+
+  if edtObsPesquisa.Text <> '' then
+    obs:= ' AND UPPER(OBS) LIKE UPPER('+ #39 + '%' + edtObsPesquisa.Text + '%' + #39 + ')';
+  if cboAtividadePesq.Text <> '' then
+    atividadePesq:= ' AND MH.ATI_CODIGO = ' + inttostr(cboAtividadePesq.keyvalue);
+
   /////TITULOS DA GRID////////////
+
   cdsGrid.close;
   cdsGrid.FieldDefs.Clear;
   cdsGrid.FieldDefs.Add('DATA', ftString, 18, false);
@@ -303,16 +348,33 @@ begin
   if tipo <> '' then
     qryPesquisa.SQL.Add('WHERE ATI_TIPO=:ATI_TIPO ');
   qryPesquisa.SQL.Add('ORDER BY ATI_DESCRICAO');
+
   if tipo <> '' then
     qryPesquisa.parambyname('ATI_TIPO').asstring:= tipo;
+
   qryPesquisa.Open;
   qryPesquisa.FetchAll;
-
- // qtde_horas_total:= 0;
+  qryPesquisa.first;
 
   while not qryPesquisa.eof do
   begin
-    cdsGrid.FieldDefs.Add(qryPesquisa.fieldbyname('ATI_DESCRICAO').asstring, ftString, 10, false);
+    //Verifica se tem registros na coluna para nao add colunas sem registros
+     qryPesqAux.Close;
+     qryPesqAux.SQL.Clear;
+     qryPesqAux.SQL.Add('SELECT ATI_CODIGO FROM MOVIMENTACAO_HORA MH WHERE ATI_CODIGO=:ATI_CODIGO');
+     qryPesqAux.parambyname('ATI_CODIGO').asstring:= qryPesquisa.fieldbyname('ATI_CODIGO').AsString;
+     if dta <> '' then
+       qryPesqAux.SQL.Add(dta);
+     if cboAtividadePesq.Text <> '' then
+       qryPesqAux.sql.add(atividadePesq);
+     if edtObsPesquisa.Text <> '' then
+       qryPesqAux.SQL.Add( obs );  
+
+     qryPesqAux.Open;
+     qryPesqAux.FetchAll;
+    //FIM Verifica se tem registros na coluna para nao add colunas sem registros
+    if not qryPesqAux.IsEmpty then
+      cdsGrid.FieldDefs.Add(qryPesquisa.fieldbyname('ATI_DESCRICAO').asstring, ftString, 10, false);
     qryPesquisa.next;
   end;
 
@@ -321,30 +383,19 @@ begin
   cdsGrid.CreateDataSet;
   /////FIM TITULOS DA GRID////////////
 
-  data1 := Copy(txt_data_i.Text,4,3) + Copy(txt_data_i.Text,1,3) + Copy(txt_data_i.Text,7,4) + ' 00:00:00';
-  data2 := Copy(txt_data_f.Text,4,3) + Copy(txt_data_f.Text,1,3) + Copy(txt_data_f.Text,7,4) + ' 23:59:59';
-
-  if (txt_data_i.Text <> '  /  /    ') and (txt_data_f.Text <> '  /  /    ') then
-    dta := ' AND MH.DATA BETWEEN '+ #39 + data1 + #39 + ' AND '+ #39 + data2 + #39
-  else
-    dta := '';
-
-  if edtObsPesquisa.Text <> '' then
-    obs:= ' AND UPPER(OBS) LIKE UPPER('+ #39 + '%' + edtObsPesquisa.Text + '%' + #39 + ')';
- // else
- //   obs:= '';
-
   qryPesquisa.Close;
   qryPesquisa.SQL.Clear;
   qryPesquisa.SQL.Add('SELECT DATA  ');
   qryPesquisa.SQL.Add(' FROM MOVIMENTACAO_HORA MH INNER JOIN CAD_ATIVIDADES CA ON MH.ATI_CODIGO = CA.ATI_CODIGO ');
-  qryPesquisa.SQL.Add(' WHERE 1=1 ');
+  qryPesquisa.SQL.Add(' WHERE 1=1 AND QTDE_HORAS IS NOT NULL ');
   if tipo <> '' then
     qryPesquisa.SQL.Add('AND CA.ATI_TIPO=:ATI_TIPO ');
   if dta <> '' then
     qryPesquisa.SQL.Add( dta );
   if edtObsPesquisa.Text <> '' then
     qryPesquisa.SQL.Add( obs );
+  if cboAtividadePesq.Text <> '' then
+    qryPesquisa.sql.add(atividadePesq);
   qryPesquisa.SQL.Add(' GROUP BY DATA ');
   qryPesquisa.SQL.Add(' ORDER BY DATA');
   if tipo <> '' then
@@ -354,6 +405,8 @@ begin
   qryPesquisa.First;
 
   TotalMinutos := 0;
+
+  cdsGrid.EmptyDataSet;
 
   while not qryPesquisa.eof do
   begin
@@ -372,6 +425,8 @@ begin
         qryPesqAux.SQL.Add('AND CA.ATI_TIPO=:ATI_TIPO ');
       if edtObsPesquisa.Text <> '' then
         qryPesqAux.SQL.Add( obs );
+      if cboAtividadePesq.Text <> '' then
+        qryPesqAux.sql.add(atividadePesq);
       qryPesqAux.SQL.Add(' ORDER BY ATI_DESCRICAO');
       qryPesqAux.parambyname('DATA').AsDateTime:= qryPesquisa.fieldbyname('DATA').AsDateTime;
       if tipo <> '' then
@@ -387,11 +442,10 @@ begin
         nomeColuna := DBGrid1.Columns[i].FieldName;
 
         if (nomeColuna <> 'DATA') and (nomeColuna <> 'TOTAL') and (nomeColuna = qryPesqAux.fieldbyname('ATI_DESCRICAO').asstring) then
-           //and (qryPesqAux.fieldbyname('QTDE_HORAS').asstring <> '') then
         begin
-          IF qryPesqAux.fieldbyname('OBS').asstring <> '' then
+          IF (qryPesqAux.fieldbyname('OBS').asstring <> '') then
             cdsGrid.FieldByName(nomeColuna).AsString := qryPesqAux.fieldbyname('QTDE_HORAS').asstring + '_'
-          ELSE
+          ELSE 
             cdsGrid.FieldByName(nomeColuna).AsString := qryPesqAux.fieldbyname('QTDE_HORAS').asstring;
 
           if qryPesqAux.fieldbyname('QTDE_HORAS').asstring <> '' then
@@ -404,16 +458,11 @@ begin
 
             // Soma tudo em minutos
             TotalMinutos := TotalMinutos + (Horas * 60) + Minutos;
-
-            //qtde_horas_total:= qtde_horas_total + StrToTime(qryPesqAux.fieldbyname('QTDE_HORAS').asstring);
           end;
-
-         // cdsGrid.FieldByName('ACORDAR').AsString := qryPesqAux.fieldbyname('ACORDAR').asstring;
-
+        
           qryPesqAux.Next;
         end;
         cdsGrid.FieldByName('TOTAL').AsString := timetostr(qtde_horas);
-       //cdsGrid.FieldByName('TOTAL').AsFloat := qtde_horas;
         Inc(i);  // Incrementa o índice
       end;
 
@@ -427,21 +476,17 @@ begin
   cdsGrid.post;
 
 
-   cdsGrid.Append;
+  cdsGrid.Append;
    /////Calcular total hora por coluna/////////////
-   qtde_horas := 0;
- //  cdsGrid.First;
+  qtde_horas := 0;
 
   qryPesquisa.Close;
   qryPesquisa.SQL.Clear;
   qryPesquisa.SQL.Add('SELECT ATI_DESCRICAO,                       ');
- // qryPesquisa.SQL.Add(' case when (QTDE_HORAS/3600) > 10 then ''0''||(QTDE_HORAS/3600) else (QTDE_HORAS/3600) end ||'':''||  ');
-  qryPesquisa.SQL.Add(' case when (QTDE_HORAS/3600) > 10 then ''''||(QTDE_HORAS/3600) else (QTDE_HORAS/3600) end ||'':''||  ');
+  qryPesquisa.SQL.Add(' case when (QTDE_HORAS/3600) > 10 then ''''||(QTDE_HORAS/3600) else (QTDE_HORAS/3600) end ||'':''||   ');
   qryPesquisa.SQL.Add('    CASE when ((QTDE_HORAS-((QTDE_HORAS)/3600)*3600)/60) < 10 then                                    ');
- // qryPesquisa.SQL.Add(' ''0''||((QTDE_HORAS-((QTDE_HORAS)/3600)*3600)/60) else                                               ');
   qryPesquisa.SQL.Add(' ''0''||((QTDE_HORAS-((QTDE_HORAS)/3600)*3600)/60) else                                               ');
   qryPesquisa.SQL.Add('((QTDE_HORAS-((QTDE_HORAS)/3600)*3600)/60) end AS TOTAL_HORAS                                         ');
-
   qryPesquisa.SQL.Add('FROM                                                                                                   ');
   qryPesquisa.SQL.Add('(                                                                                                      ');
   qryPesquisa.SQL.Add('SELECT ATI_DESCRICAO,                                                                                  ');
@@ -460,6 +505,9 @@ begin
     qryPesquisa.SQL.Add( dta );
   if edtObsPesquisa.Text <> '' then
     qryPesquisa.SQL.Add( obs );
+  if cboAtividadePesq.Text <> '' then
+    qryPesquisa.sql.add(atividadePesq);
+
   qryPesquisa.SQL.Add(' GROUP BY ATI_DESCRICAO )');
   qryPesquisa.SQL.Add(' ORDER BY ATI_DESCRICAO');
   if tipo <> '' then
@@ -468,14 +516,11 @@ begin
   qryPesquisa.FetchAll;
   qryPesquisa.First;
 
-   while not qryPesquisa.Eof do
-   begin
-    // if cdsGrid.fieldbyname('ACADEMIA').asstring <> '' then
-    //  qtde_horas := qtde_horas + strtotime(Copy(cdsGrid.fieldbyname('ACADEMIA').asstring, 1, 8));
-     cdsGrid.fieldbyname(qryPesquisa.fieldbyname('ATI_DESCRICAO').asstring).asstring:= qryPesquisa.fieldbyname('TOTAL_HORAS').asstring;
-     qryPesquisa.Next;
-   end;
-  //cdsGrid.fieldbyname('ACADEMIA').asstring:= timetostr(qtde_horas);
+  while not qryPesquisa.Eof do
+  begin
+    cdsGrid.fieldbyname(qryPesquisa.fieldbyname('ATI_DESCRICAO').asstring).asstring:= qryPesquisa.fieldbyname('TOTAL_HORAS').asstring;
+    qryPesquisa.Next;
+  end;
   /////FIM Calcular total hora por coluna/////////////
 
   // Converte de volta para HH:MM, garantindo que pode ultrapassar 24 horas
@@ -486,10 +531,14 @@ begin
 
   cdsGrid.FieldByName('DATA').AsString := 'TOTAL';
   cdsGrid.FieldByName('TOTAL').AsString :=  qtde_horas_total;
- // cdsGrid.FieldByName('TOTAL').AsString := timetostr(qtde_horas_total);
   cdsGrid.post;
 
   edtDias.Text := inttostr(cdsGrid.RecordCount - 2) + ' dias pesquisados'; //-2 é para NAO contar linha verde escuro e TOTAL
+
+  //calcular qtde de dias pesquisados
+  qtde_dias := DiasEntreDatas(txt_data_i.Date, txt_data_f.Date);
+  edtIntervaloDatas.text := IntToStr(qtde_dias);
+  //FIM calcular qtde de dias pesquisados
 
 end;
 
@@ -555,9 +604,6 @@ procedure TfrmMovimentacaoHoras.DBGrid1DblClick(Sender: TObject);
 var
   data_pesquisa: string;
 begin
- //  showmessage(DBGrid1.SelectedField.FieldName );
- //  showmessage(cdsGrid.Fields[0].AsString);
-
   data_pesquisa:=  Copy(cdsGrid.Fields[0].AsString,1,3) +  Copy(cdsGrid.Fields[0].AsString,4,3) + Copy(cdsGrid.Fields[0].AsString,7,4)+ ' 00:00:00';
 
   qryPesquisa.Close;
@@ -601,9 +647,6 @@ procedure TfrmMovimentacaoHoras.Alterar1Click(Sender: TObject);
 var
   data_pesquisa : string;
 begin
- // showmessage(DBGrid1.SelectedField.FieldName);
- // showmessage(cdsGrid.Fields[0].AsString);
-
   data_pesquisa:=  Copy(cdsGrid.Fields[0].AsString,1,3) +  Copy(cdsGrid.Fields[0].AsString,4,3) + Copy(cdsGrid.Fields[0].AsString,7,4)+ ' 00:00:00';
 
   qryPesquisa.Close;
@@ -626,11 +669,6 @@ begin
   edtObs.Text:= qryPesquisa.FieldByName('obs').AsString;
 
   alterar:= 'S';
-
-  //qryPesquisa.parambyname('QTDE_HORAS').asstring:= edtTempo.Text;
-  //qryPesquisa.parambyname('OBS').asstring:= edtObs.Text;
-
-
 
 end;
 
@@ -661,7 +699,276 @@ begin
   qryAtividade.Open;
   qryAtividade.FetchAll;
 
+  qryAtividadePesquisa.Close;
+  qryAtividadePesquisa.SQL.Clear;
+  qryAtividadePesquisa.SQL.Add('SELECT ATI_CODIGO, ATI_DESCRICAO AS ATIVIDADE FROM CAD_ATIVIDADES   ');
+  if tipo <> '' then
+    qryAtividadePesquisa.SQL.Add('WHERE ATI_TIPO=:ATI_TIPO ');
+  qryAtividadePesquisa.SQL.Add('ORDER BY ATI_DESCRICAO');
+  if tipo <> '' then
+    qryAtividadePesquisa.parambyname('ATI_TIPO').asstring:= tipo;
+  qryAtividadePesquisa.Open;
+  qryAtividadePesquisa.FetchAll;    
+
   edtObs.clear;
+
+end;
+
+procedure TfrmMovimentacaoHoras.cboAtividadePesqKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  IF KEY =VK_back then
+  begin
+    cboAtividadePesq.KeyValue := -1;
+  end;  
+end;
+
+
+procedure TfrmMovimentacaoHoras.DBGrid1TitleClick(Column: TColumn);
+var
+  nomeColuna, tipo, data1, data2, dta, obs: string;
+  i: integer;
+  qtde_horas : TTime;
+  Horas, Minutos, TotalMinutos, TotalHoras, qtde_dias: Integer;
+  qtde_horas_total, atividadePesq, campo: string;
+
+begin
+
+  campo := column.fieldname; // CAMPO RECEBE O NOME DA COLUNA CLICADA,
+  application.processmessages; // para considerar algo que aconteça no dbgrid durante a entrada nesta procedure
+
+  data1 := Copy(txt_data_i.Text,4,3) + Copy(txt_data_i.Text,1,3) + Copy(txt_data_i.Text,7,4) + ' 00:00:00';
+  data2 := Copy(txt_data_f.Text,4,3) + Copy(txt_data_f.Text,1,3) + Copy(txt_data_f.Text,7,4) + ' 23:59:59';
+
+  if (txt_data_i.Text <> '  /  /    ') and (txt_data_f.Text <> '  /  /    ') then
+    dta := ' AND DATA BETWEEN '+ #39 + data1 + #39 + ' AND '+ #39 + data2 + #39
+  else
+    dta := '';
+
+
+  if edtObsPesquisa.Text <> '' then
+    obs:= ' AND UPPER(OBS) LIKE UPPER('+ #39 + '%' + edtObsPesquisa.Text + '%' + #39 + ')';
+  if cboAtividadePesq.Text <> '' then
+    atividadePesq:= ' AND MH.ATI_CODIGO = ' + inttostr(cboAtividadePesq.keyvalue);
+
+  /////TITULOS DA GRID////////////
+
+  cdsGrid.close;
+  cdsGrid.FieldDefs.Clear;
+  cdsGrid.FieldDefs.Add('DATA', ftDate);
+  //cdsGrid.FieldDefs.Add('DATA', ftString, 18, false);
+
+  if rdgTipoPesquisa.ItemIndex = 0 then
+    tipo  := 'A'
+  else if rdgTipoPesquisa.ItemIndex = 1 then
+    tipo  :=  'E'
+  else if rdgTipoPesquisa.ItemIndex = 2 then
+    tipo  :=  'R'
+  else
+    tipo := '';
+
+  qryPesquisa.Close;
+  qryPesquisa.SQL.Clear;
+  qryPesquisa.SQL.Add('SELECT ATI_CODIGO, ATI_DESCRICAO FROM CAD_ATIVIDADES   ');
+  if tipo <> '' then
+    qryPesquisa.SQL.Add('WHERE ATI_TIPO=:ATI_TIPO ');
+  qryPesquisa.SQL.Add('ORDER BY ATI_DESCRICAO');
+
+  if tipo <> '' then
+    qryPesquisa.parambyname('ATI_TIPO').asstring:= tipo;
+
+  qryPesquisa.Open;
+  qryPesquisa.FetchAll;
+  qryPesquisa.first;
+
+ // qtde_horas_total:= 0;
+
+  while not qryPesquisa.eof do
+  begin
+    //Verifica se tem registros na coluna para nao add colunas sem registros
+     qryPesqAux.Close;
+     qryPesqAux.SQL.Clear;
+     qryPesqAux.SQL.Add('SELECT ATI_CODIGO FROM MOVIMENTACAO_HORA MH WHERE ATI_CODIGO=:ATI_CODIGO');
+     qryPesqAux.parambyname('ATI_CODIGO').asstring:= qryPesquisa.fieldbyname('ATI_CODIGO').AsString;
+     if dta <> '' then
+       qryPesqAux.SQL.Add(dta);
+     if cboAtividadePesq.Text <> '' then
+       qryPesqAux.sql.add(atividadePesq);
+
+     qryPesqAux.Open;
+     qryPesqAux.FetchAll;
+    //FIM Verifica se tem registros na coluna para nao add colunas sem registros
+    if not qryPesqAux.IsEmpty then
+      cdsGrid.FieldDefs.Add(qryPesquisa.fieldbyname('ATI_DESCRICAO').asstring, ftString, 10, false);
+    qryPesquisa.next;
+  end;
+
+  cdsGrid.FieldDefs.Add('TOTAL', ftString, 10, false);
+  cdsGrid.FieldDefs.Add('ACORDAR', ftString, 10, false);
+  cdsGrid.CreateDataSet;
+  /////FIM TITULOS DA GRID////////////
+
+  qryPesquisa.Close;
+  qryPesquisa.SQL.Clear;
+  qryPesquisa.SQL.Add('SELECT DATA  ');
+  qryPesquisa.SQL.Add(' FROM MOVIMENTACAO_HORA MH INNER JOIN CAD_ATIVIDADES CA ON MH.ATI_CODIGO = CA.ATI_CODIGO ');
+  qryPesquisa.SQL.Add(' WHERE 1=1 AND QTDE_HORAS IS NOT NULL ');
+  if tipo <> '' then
+    qryPesquisa.SQL.Add('AND CA.ATI_TIPO=:ATI_TIPO ');
+  if dta <> '' then
+    qryPesquisa.SQL.Add( dta );
+  if edtObsPesquisa.Text <> '' then
+    qryPesquisa.SQL.Add( obs );
+  if cboAtividadePesq.Text <> '' then
+    qryPesquisa.sql.add(atividadePesq);
+  qryPesquisa.SQL.Add(' GROUP BY DATA ');
+  qryPesquisa.SQL.Add(' ORDER BY DATA');
+  if tipo <> '' then
+    qryPesquisa.parambyname('ATI_TIPO').asstring:= tipo;
+  qryPesquisa.Open;
+  qryPesquisa.FetchAll;
+  qryPesquisa.First;
+
+  TotalMinutos := 0;
+
+  cdsGrid.EmptyDataSet;
+
+  while not qryPesquisa.eof do
+  begin
+    if qryPesquisa.fieldbyname('DATA').asstring <> '' then
+    begin
+      i := 0;
+      cdsGrid.Append;
+      cdsGrid.FieldByName('DATA').AsString := qryPesquisa.fieldbyname('DATA').asstring;
+
+      qryPesqAux.Close;
+      qryPesqAux.SQL.Clear;
+      qryPesqAux.SQL.Add('SELECT ATI_DESCRICAO, QTDE_HORAS, OBS, ACORDAR  ');
+      qryPesqAux.SQL.Add(' FROM MOVIMENTACAO_HORA MH INNER JOIN CAD_ATIVIDADES CA ON MH.ATI_CODIGO = CA.ATI_CODIGO ');
+      qryPesqAux.SQL.Add(' WHERE DATA=:DATA ');
+      if tipo <> '' then
+        qryPesqAux.SQL.Add('AND CA.ATI_TIPO=:ATI_TIPO ');
+      if edtObsPesquisa.Text <> '' then
+        qryPesqAux.SQL.Add( obs );
+      if cboAtividadePesq.Text <> '' then
+        qryPesqAux.sql.add(atividadePesq);
+      qryPesqAux.SQL.Add(' ORDER BY ATI_DESCRICAO');
+      qryPesqAux.parambyname('DATA').AsDateTime:= qryPesquisa.fieldbyname('DATA').AsDateTime;
+      if tipo <> '' then
+        qryPesqAux.parambyname('ATI_TIPO').asstring:= tipo;
+      qryPesqAux.Open;
+      qryPesqAux.FetchAll;
+      qryPesqAux.First;
+
+      qtde_horas:=0;
+
+      while (i < DBGrid1.Columns.Count) do
+      begin
+        nomeColuna := DBGrid1.Columns[i].FieldName;
+
+        if (nomeColuna <> 'DATA') and (nomeColuna <> 'TOTAL') and (nomeColuna = qryPesqAux.fieldbyname('ATI_DESCRICAO').asstring) then
+        begin
+          IF (qryPesqAux.fieldbyname('OBS').asstring <> '') then
+            cdsGrid.FieldByName(nomeColuna).AsString := qryPesqAux.fieldbyname('QTDE_HORAS').asstring + '_'
+          ELSE
+            cdsGrid.FieldByName(nomeColuna).AsString := qryPesqAux.fieldbyname('QTDE_HORAS').asstring;
+
+          if qryPesqAux.fieldbyname('QTDE_HORAS').asstring <> '' then
+          begin
+            qtde_horas:= qtde_horas + StrToTime(qryPesqAux.fieldbyname('QTDE_HORAS').asstring);//soma horas por dia
+
+            // Converte 'HH:MM' para horas e minutos
+            Horas := StrToInt(Copy(qryPesqAux.fieldbyname('QTDE_HORAS').asstring, 1, Pos(':', qryPesqAux.fieldbyname('QTDE_HORAS').asstring) - 1)); // Pega a parte das horas
+            Minutos := StrToInt(Copy(qryPesqAux.fieldbyname('QTDE_HORAS').asstring, Pos(':', qryPesqAux.fieldbyname('QTDE_HORAS').asstring) + 1, 2));
+
+            // Soma tudo em minutos
+            TotalMinutos := TotalMinutos + (Horas * 60) + Minutos;
+          end;
+          qryPesqAux.Next;
+        end;
+        cdsGrid.FieldByName('TOTAL').AsString := timetostr(qtde_horas);
+        Inc(i);  // Incrementa o índice
+      end;
+
+      cdsGrid.FieldByName('ACORDAR').AsString := qryPesqAux.fieldbyname('ACORDAR').asstring;
+
+      cdsGrid.post;
+    end;
+    qryPesquisa.Next;
+  end;   
+
+  cdsGrid.Append;    
+  cdsGrid.post;
+
+  cdsGrid.Append;
+   /////Calcular total hora por coluna/////////////
+  qtde_horas := 0;
+
+  qryPesquisa.Close;
+  qryPesquisa.SQL.Clear;
+  qryPesquisa.SQL.Add('SELECT ATI_DESCRICAO, ');
+  qryPesquisa.SQL.Add(' case when (QTDE_HORAS/3600) > 10 then ''''||(QTDE_HORAS/3600) else (QTDE_HORAS/3600) end ||'':''||   ');
+  qryPesquisa.SQL.Add('    CASE when ((QTDE_HORAS-((QTDE_HORAS)/3600)*3600)/60) < 10 then                                    ');
+  qryPesquisa.SQL.Add(' ''0''||((QTDE_HORAS-((QTDE_HORAS)/3600)*3600)/60) else                                               ');
+  qryPesquisa.SQL.Add('((QTDE_HORAS-((QTDE_HORAS)/3600)*3600)/60) end AS TOTAL_HORAS                                         ');
+
+  qryPesquisa.SQL.Add('FROM                                                                                                   ');
+  qryPesquisa.SQL.Add('(                                                                                                      ');
+  qryPesquisa.SQL.Add('SELECT ATI_DESCRICAO,                                                                                  ');
+  qryPesquisa.SQL.Add('    CAST(SUM(                                                                                          ');
+  qryPesquisa.SQL.Add('        EXTRACT( HOUR FROM QTDE_HORAS ) * 3600 +                                                       ');
+  qryPesquisa.SQL.Add('        EXTRACT( MINUTE FROM QTDE_HORAS ) * 60 +                                                       ');
+  qryPesquisa.SQL.Add('        EXTRACT( SECOND FROM QTDE_HORAS )                                                              ');
+  qryPesquisa.SQL.Add('    ) AS INTEGER) AS QTDE_HORAS                                                                        ');  
+
+  qryPesquisa.SQL.Add(' FROM MOVIMENTACAO_HORA MH INNER JOIN CAD_ATIVIDADES CA ON MH.ATI_CODIGO = CA.ATI_CODIGO ');
+  qryPesquisa.SQL.Add('WHERE 1=1 ');
+  if tipo <> '' then
+    qryPesquisa.SQL.Add('AND CA.ATI_TIPO=:ATI_TIPO ');
+  if dta <> '' then
+    qryPesquisa.SQL.Add( dta );
+  if edtObsPesquisa.Text <> '' then
+    qryPesquisa.SQL.Add( obs );
+  if cboAtividadePesq.Text <> '' then
+    qryPesquisa.sql.add(atividadePesq);
+
+  qryPesquisa.SQL.Add(' GROUP BY ATI_DESCRICAO )');
+  qryPesquisa.SQL.Add(' ORDER BY ATI_DESCRICAO ' );
+  if tipo <> '' then
+    qryPesquisa.parambyname('ATI_TIPO').asstring:= tipo;
+  qryPesquisa.Open;
+  qryPesquisa.FetchAll;
+  qryPesquisa.First;
+
+   while not qryPesquisa.Eof do
+   begin
+     cdsGrid.fieldbyname(qryPesquisa.fieldbyname('ATI_DESCRICAO').asstring).asstring:= qryPesquisa.fieldbyname('TOTAL_HORAS').asstring;
+     qryPesquisa.Next;
+   end;
+  /////FIM Calcular total hora por coluna/////////////
+
+  // Converte de volta para HH:MM, garantindo que pode ultrapassar 24 horas
+  TotalHoras := TotalMinutos div 60;
+  TotalMinutos := TotalMinutos mod 60;
+
+  qtde_horas_total := Format('%d:%2.2d', [TotalHoras, TotalMinutos]);
+
+  cdsGrid.FieldByName('TOTAL').AsString :=  qtde_horas_total; 
+  cdsGrid.post;
+
+  edtDias.Text := inttostr(cdsGrid.RecordCount - 2) + ' dias pesquisados'; //-2 é para NAO contar linha verde escuro e TOTAL
+
+  //calcular qtde de dias pesquisados
+  qtde_dias := DiasEntreDatas(txt_data_i.Date, txt_data_f.Date);
+  edtIntervaloDatas.text := IntToStr(qtde_dias);
+  //FIM calcular qtde de dias pesquisados
+
+
+  //cdsGrid.Filter := 'DATA <> ''''';
+  cdsGrid.Filter := 'DATA IS NOT NULL';
+  cdsGrid.Filtered := True;
+  cdsGrid.IndexFieldNames := campo;    
+
 
 end;
 

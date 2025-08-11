@@ -4,7 +4,7 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
   BorderStyle = bsSingle
   Caption = 'Movimenta'#231#227'o de Horas'
   ClientHeight = 501
-  ClientWidth = 1132
+  ClientWidth = 1246
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,7 +20,7 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
   object GroupBox1: TGroupBox
     Left = 0
     Top = 59
-    Width = 1132
+    Width = 1246
     Height = 122
     Align = alTop
     TabOrder = 0
@@ -199,8 +199,8 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
   object DBGrid1: TDBGrid
     Left = 0
     Top = 246
-    Width = 1132
-    Height = 192
+    Width = 1246
+    Height = 174
     Align = alClient
     DataSource = dsGrid
     FixedColor = clNavy
@@ -220,11 +220,12 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
     TitleFont.Style = [fsBold]
     OnDrawColumnCell = DBGrid1DrawColumnCell
     OnDblClick = DBGrid1DblClick
+    OnTitleClick = DBGrid1TitleClick
   end
   object GroupBox2: TGroupBox
     Left = 0
     Top = 181
-    Width = 1132
+    Width = 1246
     Height = 65
     Align = alTop
     TabOrder = 2
@@ -255,7 +256,7 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
       ParentFont = False
     end
     object Label5: TLabel
-      Left = 700
+      Left = 1033
       Top = 26
       Width = 76
       Height = 26
@@ -264,7 +265,7 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
       ParentColor = False
     end
     object Label6: TLabel
-      Left = 780
+      Left = 1113
       Top = 34
       Width = 347
       Height = 16
@@ -277,13 +278,26 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
       ParentFont = False
     end
     object Label7: TLabel
-      Left = 268
+      Left = 601
       Top = 8
       Width = 38
       Height = 20
       Caption = 'OBS:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
+      Font.Height = -16
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label10: TLabel
+      Left = 272
+      Top = 7
+      Width = 65
+      Height = 20
+      Caption = 'Atividade'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'MS Sans Serif'
       Font.Style = []
@@ -318,7 +332,7 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
       TabOrder = 1
     end
     object btnPesquisar: TButton
-      Left = 584
+      Left = 917
       Top = 25
       Width = 108
       Height = 31
@@ -333,7 +347,7 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
       OnClick = btnPesquisarClick
     end
     object edtObsPesquisa: TEdit
-      Left = 267
+      Left = 600
       Top = 27
       Width = 312
       Height = 28
@@ -347,11 +361,28 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
       TabOrder = 3
       OnKeyPress = edtObsKeyPress
     end
+    object cboAtividadePesq: TDBLookupComboBox
+      Left = 271
+      Top = 28
+      Width = 320
+      Height = 28
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      KeyField = 'ATI_CODIGO'
+      ListField = 'ATIVIDADE'
+      ListSource = dsAtividadePesquisa
+      ParentFont = False
+      TabOrder = 4
+      OnKeyDown = cboAtividadePesqKeyDown
+    end
   end
   object GroupBox3: TGroupBox
     Left = 0
     Top = 0
-    Width = 1132
+    Width = 1246
     Height = 59
     Align = alTop
     TabOrder = 3
@@ -372,15 +403,41 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
   end
   object GroupBox4: TGroupBox
     Left = 0
-    Top = 438
-    Width = 1132
-    Height = 63
+    Top = 420
+    Width = 1246
+    Height = 81
     Align = alBottom
     TabOrder = 4
+    object Label8: TLabel
+      Left = 229
+      Top = 20
+      Width = 223
+      Height = 16
+      Caption = 'Intervalo de Datas Pesquisadas'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label9: TLabel
+      Left = 26
+      Top = 18
+      Width = 187
+      Height = 16
+      Caption = 'Qtde de Dias Pesquisados'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
     object edtDias: TEdit
       Left = 24
-      Top = 24
-      Width = 641
+      Top = 41
+      Width = 185
       Height = 28
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -391,6 +448,20 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
       ReadOnly = True
       TabOrder = 0
       Text = 'edtDias'
+    end
+    object edtIntervaloDatas: TEdit
+      Left = 229
+      Top = 40
+      Width = 224
+      Height = 28
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -16
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 1
+      Text = 'edtIntervaloDatas'
     end
   end
   object dsAtividade: TDataSource
@@ -462,11 +533,37 @@ object frmMovimentacaoHoras: TfrmMovimentacaoHoras
     Top = 240
   end
   object PopupMenu1: TPopupMenu
-    Left = 264
-    Top = 232
+    Left = 240
+    Top = 256
     object Alterar1: TMenuItem
       Caption = 'Alterar'
       OnClick = Alterar1Click
+    end
+  end
+  object dsAtividadePesquisa: TDataSource
+    DataSet = qryAtividadePesquisa
+    Left = 304
+    Top = 229
+  end
+  object qryAtividadePesquisa: TIBQuery
+    Database = frmModulo.BD
+    Transaction = frmModulo.IBTransaction1
+    BufferChunks = 1000
+    CachedUpdates = False
+    SQL.Strings = (
+      'SELECT ATI_DESCRICAO AS ATIVIDADE, ATI_CODIGO'
+      'FROM CAD_ATIVIDADES')
+    Left = 352
+    Top = 229
+    object qryAtividadePesquisaATIVIDADE: TIBStringField
+      FieldName = 'ATIVIDADE'
+      Origin = 'CAD_ATIVIDADES.ATI_DESCRICAO'
+      Size = 100
+    end
+    object qryAtividadePesquisaATI_CODIGO: TIntegerField
+      FieldName = 'ATI_CODIGO'
+      Origin = 'CAD_ATIVIDADES.ATI_CODIGO'
+      Required = True
     end
   end
 end

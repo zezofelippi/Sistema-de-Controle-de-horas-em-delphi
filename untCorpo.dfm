@@ -124,6 +124,7 @@ object frmCorpo: TfrmCorpo
     TitleFont.Height = -11
     TitleFont.Name = 'MS Sans Serif'
     TitleFont.Style = []
+    OnTitleClick = DBGrid1TitleClick
     Columns = <
       item
         Expanded = False
