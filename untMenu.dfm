@@ -34,8 +34,15 @@ object frmMenu: TfrmMenu
       end
     end
     object Importardoexcel1: TMenuItem
-      Caption = 'Importar do excel'
-      OnClick = Importardoexcel1Click
+      Caption = 'Configura'#231#245'es'
+      object ImportarExcel1: TMenuItem
+        Caption = 'Importar Excel'
+        OnClick = ImportarExcel1Click
+      end
+      object Importardadoscorpo1: TMenuItem
+        Caption = 'Importar dados corpo'
+        OnClick = Importardadoscorpo1Click
+      end
     end
   end
 end

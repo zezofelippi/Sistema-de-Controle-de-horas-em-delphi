@@ -14,10 +14,13 @@ type
     CadastrodeAtividades1: TMenuItem;
     Importardoexcel1: TMenuItem;
     Corpo1: TMenuItem;
+    ImportarExcel1: TMenuItem;
+    Importardadoscorpo1: TMenuItem;
     procedure MovimentaodeHoras1Click(Sender: TObject);
     procedure CadastrodeAtividades1Click(Sender: TObject);
-    procedure Importardoexcel1Click(Sender: TObject);
     procedure Corpo1Click(Sender: TObject);
+    procedure ImportarExcel1Click(Sender: TObject);
+    procedure Importardadoscorpo1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -30,7 +33,7 @@ var
 implementation
 
 uses untMovimentacaoHoras, untCadAtividade, untExcelParaBancoDados,
-  untCorpo;
+  untCorpo, untImportarDadosCorpo;
 
 {$R *.dfm}
 
@@ -46,16 +49,22 @@ Application.CreateForm(TfrmCadAtividade, frmCadAtividade);
 frmCadAtividade.show;
 end;
 
-procedure TfrmMenu.Importardoexcel1Click(Sender: TObject);
+procedure TfrmMenu.Corpo1Click(Sender: TObject);
+begin
+Application.CreateForm(TfrmCorpo, frmCorpo);
+frmCorpo.show;
+end;
+
+procedure TfrmMenu.ImportarExcel1Click(Sender: TObject);
 begin
 Application.CreateForm(TfrmExcelParaBancoDados, frmExcelParaBancoDados);
 frmExcelParaBancoDados.show;
 end;
 
-procedure TfrmMenu.Corpo1Click(Sender: TObject);
+procedure TfrmMenu.Importardadoscorpo1Click(Sender: TObject);
 begin
-Application.CreateForm(TfrmCorpo, frmCorpo);
-frmCorpo.show;
+Application.CreateForm(TfrmImportarDadosCorpo, frmImportarDadosCorpo);
+frmImportarDadosCorpo.show;
 end;
 
 end.

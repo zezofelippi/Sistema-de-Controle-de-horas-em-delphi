@@ -7,7 +7,8 @@ uses
   untModulo in 'untModulo.pas' {frmModulo: TDataModule},
   untCadAtividade in 'untCadAtividade.pas' {frmCadAtividade},
   untExcelParaBancoDados in 'untExcelParaBancoDados.pas' {frmExcelParaBancoDados},
-  untCorpo in 'untCorpo.pas' {frmCorpo};
+  untCorpo in 'untCorpo.pas' {frmCorpo},
+  untImportarDadosCorpo in 'untImportarDadosCorpo.pas' {frmImportarDadosCorpo};
 
 {$R *.res}
 
@@ -19,5 +20,6 @@ begin
   Application.CreateForm(TfrmCadAtividade, frmCadAtividade);
   Application.CreateForm(TfrmExcelParaBancoDados, frmExcelParaBancoDados);
   Application.CreateForm(TfrmCorpo, frmCorpo);
+  Application.CreateForm(TfrmImportarDadosCorpo, frmImportarDadosCorpo);
   Application.Run;
 end.
