@@ -207,8 +207,6 @@ begin
 end;
 
 procedure TfrmCorpo.Alterar1Click(Sender: TObject);
-var
-  data_pesquisa : string;
 begin
   
   qryPesquisa.Close;

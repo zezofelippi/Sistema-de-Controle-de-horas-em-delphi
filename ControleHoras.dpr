@@ -8,7 +8,8 @@ uses
   untCadAtividade in 'untCadAtividade.pas' {frmCadAtividade},
   untExcelParaBancoDados in 'untExcelParaBancoDados.pas' {frmExcelParaBancoDados},
   untCorpo in 'untCorpo.pas' {frmCorpo},
-  untImportarDadosCorpo in 'untImportarDadosCorpo.pas' {frmImportarDadosCorpo};
+  untImportarDadosCorpo in 'untImportarDadosCorpo.pas' {frmImportarDadosCorpo},
+  untTarefas in 'untTarefas.pas' {frmTarefas};
 
 {$R *.res}
 
@@ -21,5 +22,6 @@ begin
   Application.CreateForm(TfrmExcelParaBancoDados, frmExcelParaBancoDados);
   Application.CreateForm(TfrmCorpo, frmCorpo);
   Application.CreateForm(TfrmImportarDadosCorpo, frmImportarDadosCorpo);
+  Application.CreateForm(TfrmTarefas, frmTarefas);
   Application.Run;
 end.

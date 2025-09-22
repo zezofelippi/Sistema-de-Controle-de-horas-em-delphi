@@ -32,6 +32,10 @@ object frmMenu: TfrmMenu
         Caption = 'Corpo'
         OnClick = Corpo1Click
       end
+      object arefas1: TMenuItem
+        Caption = 'Tarefas'
+        OnClick = arefas1Click
+      end
     end
     object Importardoexcel1: TMenuItem
       Caption = 'Configura'#231#245'es'

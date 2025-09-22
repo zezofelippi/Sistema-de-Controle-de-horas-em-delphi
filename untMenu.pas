@@ -16,11 +16,13 @@ type
     Corpo1: TMenuItem;
     ImportarExcel1: TMenuItem;
     Importardadoscorpo1: TMenuItem;
+    arefas1: TMenuItem;
     procedure MovimentaodeHoras1Click(Sender: TObject);
     procedure CadastrodeAtividades1Click(Sender: TObject);
     procedure Corpo1Click(Sender: TObject);
     procedure ImportarExcel1Click(Sender: TObject);
     procedure Importardadoscorpo1Click(Sender: TObject);
+    procedure arefas1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -33,7 +35,7 @@ var
 implementation
 
 uses untMovimentacaoHoras, untCadAtividade, untExcelParaBancoDados,
-  untCorpo, untImportarDadosCorpo;
+  untCorpo, untImportarDadosCorpo, untTarefas;
 
 {$R *.dfm}
 
@@ -65,6 +67,12 @@ procedure TfrmMenu.Importardadoscorpo1Click(Sender: TObject);
 begin
 Application.CreateForm(TfrmImportarDadosCorpo, frmImportarDadosCorpo);
 frmImportarDadosCorpo.show;
+end;
+
+procedure TfrmMenu.arefas1Click(Sender: TObject);
+begin
+Application.CreateForm(TfrmTarefas, frmTarefas);
+frmTarefas.show;
 end;
 
 end.
