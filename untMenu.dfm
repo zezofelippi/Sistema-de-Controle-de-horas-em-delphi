@@ -36,6 +36,13 @@ object frmMenu: TfrmMenu
         Caption = 'Tarefas'
         OnClick = arefas1Click
       end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object Receitas1: TMenuItem
+        Caption = 'Receitas'
+        OnClick = Receitas1Click
+      end
     end
     object Importardoexcel1: TMenuItem
       Caption = 'Configura'#231#245'es'
