@@ -33,6 +33,7 @@ object frmReceitas: TfrmReceitas
       Top = 35
       Width = 473
       Height = 21
+      CharCase = ecUpperCase
       TabOrder = 0
     end
     object btnListar: TButton
